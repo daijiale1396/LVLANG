@@ -1,0 +1,12 @@
+id,cn,en,tc
+TEXT_OK,确定,OK,確定
+TEXT_CANCEL,取消,Cancel,取消
+TEXT_SAVE,保存,Save,儲存
+TEXT_LOAD,加载,Load,載入
+TEXT_EXIT,退出,Exit,退出
+TEXT_FIRMWARE_UPGRADE,升级固件,Firmware,升級韌體
+TEXT_CONFIG_UPGRADE,升级配置,Config,升級配置
+TEXT_MENU,功能菜单,Menu,功能選單
+TEXT_HELP,帮助,Help,幫助
+TEXT_ABOUT,关于,About,關於
+TEXT_LANGUAGE,语言,Language,語言
