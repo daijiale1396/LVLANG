@@ -1,7 +1,7 @@
 /**
  * @file ui_language.c
  * @brief LVGL 多语言自动生成源文件
- * @author Daijiale
+ * @author daijiale1396
  * @date 2025-10-31
  * @generated Automatically by LVLangGen
  */

@@ -155,7 +155,7 @@ def gen_header(rows):
     return f"""/**
  * @file ui_language.h
  * @brief LVGL 多语言自动生成头文件
- * @author Daijiale
+ * @author daijiale1396
  * @date 2025-10-31
  * @generated Automatically by LVLangGen
  */
@@ -204,7 +204,7 @@ def gen_source(rows):
     return f"""/**
  * @file ui_language.c
  * @brief LVGL 多语言自动生成源文件
- * @author Daijiale
+ * @author daijiale1396
  * @date 2025-10-31
  * @generated Automatically by LVLangGen
  */

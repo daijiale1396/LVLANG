@@ -83,7 +83,7 @@ update_label_text_recursive(lv_scr_act());
 
 
 ## 🧑‍💻 开发者信息
-- Author: Daijiale
+- Author: daijiale1396
 - Version: 1.0.0
 - License: MIT
 - Repository: https://github.com/Dai1396/LVLANG.git
@@ -91,7 +91,7 @@ update_label_text_recursive(lv_scr_act());
 
 
 ## 📜 开源协议（MIT License）
-Copyright (c) 2025 Daijiale
+Copyright (c) 2025 daijiale1396
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
 

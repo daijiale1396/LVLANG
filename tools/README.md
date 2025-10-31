@@ -1,7 +1,7 @@
 # LVLangGen
 
 **LVLangGen** 是一个针对 **LVGL** 项目的多语言自动生成工具，  
-由 Daijiale 开发，用于从 `language.csv` 自动生成 `ui_language.h` / `ui_language.c`。
+由 daijiale1396 开发，用于从 `language.csv` 自动生成 `ui_language.h` / `ui_language.c`。
 
 ## 功能
 - 支持多语言文本映射（简体 / 英文 / 繁体）
