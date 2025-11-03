@@ -1,89 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-语言表自动生成工具
-==================
-从 language.csv 自动生成：
+语言表自动生成工具 (动态语言版本 + CSV校验)
+=========================================
+可根据 CSV 动态适配任意语言列，如：
+    id,cn,en,tc,jp,fr,...
+
+自动生成：
     - inc/ui_language.h
     - src/ui_language.c
 
-该脚本会：
-    1. 检查 CSV 文件中是否有重复 ID;
-    2. 检查缺少的语言字段；
-    3. 检查是否使用了全角标点；
-    4. 自动生成语言枚举、文本表与访问函数；
-    5. 支持彩色输出提示。
-
-----------------------------------------------------------
-CSV 文件说明
-----------------------------------------------------------
-文件名: language.csv
-编码: UTF-8 (无 BOM)
-路径: 与本脚本同级或上一级目录的 language.csv
-
-格式要求:
-    第一行必须是表头: id,cn,en,tc
-
-每一行定义一个文本常量，例如：
-
-    id,cn,en,tc
-    TEXT_OK,确定,OK,確定
-    TEXT_CANCEL,取消,Cancel,取消
-    TEXT_SAVE,保存,Save,儲存
-    TEXT_LOAD,加载,Load,載入
-    TEXT_FIRMWARE_UPGRADE,升级固件,Firmware,升級韌體
-    TEXT_CONFIG_UPGRADE,升级配置,Config,升級配置
-
-字段说明:
-    id  —— 文本ID (必须唯一、全大写、以 TEXT_ 开头)
-    cn  —— 简体中文文本
-    en  —— 英文文本
-    tc  —— 繁体中文文本
-
-----------------------------------------------------------
-生成文件说明
-----------------------------------------------------------
-1. ui_language.h
-   定义语言枚举 (LANG_CN, LANG_EN, LANG_TC)
-   定义文本 ID 枚举 (TEXT_XXX)
-   声明访问函数:
-       const char *get_label_text(text_id_t id);
-       void set_language(lang_t lang);
-       void update_label_text_recursive(lv_obj_t *parent);
-
-2. ui_language.c
-   包含实际的语言映射表 text_map[]
-   实现语言切换与递归更新函数。
-
-----------------------------------------------------------
-运行方式:
-----------------------------------------------------------
-    python3 gen_lang_table.py
-
-执行成功后，会在控制台显示：
-    ✅ 已生成:
-      - inc/ui_language.h
-      - src/ui_language.c
-
-----------------------------------------------------------
-常见问题:
-----------------------------------------------------------
-❌ 找不到 language.csv
-    → 检查 CSV 文件路径和名称。
-
-❌ 重复 ID
-    → 每个文本 ID 必须唯一。
-
-⚠️ 缺少字段
-    → 某个语言文本为空，将提示但不会中断生成。
-
-⚠️ 使用了全角逗号
-    → 建议改为半角 "," 以避免 CSV 解析错误。
+并自动检测：
+    - 列名错误或重复
+    - 缺少列、空值、非法符号
+    - 行列数不匹配
 """
 
 import csv
 from pathlib import Path
 import sys
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 INC = ROOT / "inc"
@@ -97,26 +33,84 @@ SOURCE_PATH = SRC / "ui_language.c"
 RED = "\033[91m"
 YELLOW = "\033[93m"
 GREEN = "\033[92m"
+CYAN = "\033[96m"
 RESET = "\033[0m"
+
 
 def color(text, col):
     return f"{col}{text}{RESET}"
 
+
 def main():
+    # ====================== 文件检查 ======================
     if not CSV.exists():
         print(color(f"❌ 找不到 {CSV}", RED))
         sys.exit(1)
 
+    # ====================== 结构检测 ======================
+    print(color(f"🔍 正在检查 CSV 结构...", CYAN))
+
+    with open(CSV, "r", encoding="utf-8") as f:
+        first_line = f.readline().strip()
+        if not first_line:
+            print(color("❌ CSV 文件为空！", RED))
+            sys.exit(1)
+
+        if "id" not in first_line.split(","):
+            print(color("❌ 表头必须包含 'id'", RED))
+            sys.exit(1)
+
+        if re.search(r"[，；：]", first_line):
+            print(color("⚠️ 检测到全角标点，建议改为英文逗号分隔", YELLOW))
+
+    # ====================== 正式解析 ======================
     rows = []
     seen_ids = set()
     errors = 0
 
-    with open(CSV, newline='', encoding='utf-8') as f:
+    with open(CSV, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        fieldnames = reader.fieldnames
+        if not fieldnames:
+            print(color("❌ 无法读取表头，可能是格式错误或包含BOM。", RED))
+            sys.exit(1)
+
+        # 检查重复列
+        if len(fieldnames) != len(set(fieldnames)):
+            print(color(f"❌ 表头存在重复字段: {fieldnames}", RED))
+            sys.exit(1)
+
+        # 检查列命名规范
+        for col in fieldnames:
+            if not col.strip():
+                print(color(f"⚠️ 检测到空列名，请检查表头。", YELLOW))
+            if " " in col:
+                print(color(f"⚠️ 列名 '{col}' 含空格，建议去除。", YELLOW))
+
+        # 语言列
+        lang_cols = [col for col in fieldnames if col != "id"]
+        print(color(f"🌍 检测到语言字段: {', '.join(lang_cols)}", GREEN))
+
+        # ====================== 行检查 ======================
         line_num = 1
         for row in reader:
             line_num += 1
-            row = {k: v.strip() for k, v in row.items()}
+
+            # 自动清理非字符串值
+            clean_row = {}
+            for k, v in row.items():
+                if v is None:
+                    clean_row[k] = ""
+                elif isinstance(v, list):
+                    clean_row[k] = ",".join(str(x) for x in v)
+                else:
+                    clean_row[k] = str(v).strip()
+            row = clean_row
+
+            # 检查列数
+            if len(row) != len(fieldnames):
+                print(color(f"⚠️ 第{line_num}行列数异常 ({len(row)}/{len(fieldnames)})，请检查多余逗号或缺少引号。", YELLOW))
+
             rid = row.get("id", "")
             if not rid:
                 print(color(f"⚠️ 第{line_num}行缺少 id，已跳过。", YELLOW))
@@ -128,14 +122,14 @@ def main():
             seen_ids.add(rid)
 
             # 检查空字段
-            for lang in ["cn", "en", "tc"]:
+            for lang in lang_cols:
                 if not row.get(lang):
                     print(color(f"⚠️ {rid} 缺少 {lang.upper()} 字段", YELLOW))
 
-            # 检查全角逗号
+            # 检查全角字符
             for key, val in row.items():
-                if "，" in val:
-                    print(color(f"⚠️ {rid} ({key}) 使用了全角逗号，建议改成半角 ,", YELLOW))
+                if "，" in val or "。" in val:
+                    print(color(f"⚠️ {rid} ({key}) 含全角标点，建议改为半角", YELLOW))
 
             rows.append(row)
 
@@ -143,20 +137,24 @@ def main():
         print(color(f"\n🚫 检测到 {errors} 个严重错误，请修复后再生成。", RED))
         sys.exit(1)
 
-    HEADER_PATH.write_text(gen_header(rows), encoding="utf-8")
-    SOURCE_PATH.write_text(gen_source(rows), encoding="utf-8")
+    # ====================== 输出生成 ======================
+    HEADER_PATH.write_text(gen_header(rows, lang_cols), encoding="utf-8")
+    SOURCE_PATH.write_text(gen_source(rows, lang_cols), encoding="utf-8")
 
     print(color(f"\n✅ 已生成:", GREEN))
     print(f"  - {HEADER_PATH.relative_to(ROOT)}")
     print(f"  - {SOURCE_PATH.relative_to(ROOT)}")
 
-def gen_header(rows):
+
+def gen_header(rows, lang_cols):
+    lang_enum_items = ",\n    ".join([f"LANG_{l.upper()}" for l in lang_cols])
     enum_items = ",\n    ".join([r["id"] for r in rows])
+
     return f"""/**
  * @file ui_language.h
- * @brief LVGL 多语言自动生成头文件
+ * @brief LVGL 多语言自动生成头文件 (动态语言版)
  * @author daijiale1396
- * @date 2025-10-31
+ * @date 2025-11-03
  * @generated Automatically by LVLangGen
  */
 
@@ -171,9 +169,7 @@ extern "C" {{
 #endif
 
 typedef enum {{
-    LANG_CN = 0,
-    LANG_EN,
-    LANG_TC,
+    {lang_enum_items},
     LANG_MAX
 }} lang_t;
 
@@ -192,20 +188,26 @@ void update_label_text_recursive(lv_obj_t *parent);
 #endif // UI_LANGUAGE_H
 """
 
-def gen_source(rows):
+
+def gen_source(rows, lang_cols):
+    lang_fields = ";\n    ".join([f"const char *{l}" for l in lang_cols]) + ";"
+
+    # 构建表项
     table_entries = []
     for r in rows:
-        table_entries.append(
-            f'    {{ {r["id"]}, "{r["cn"]}", "{r["en"]}", "{r["tc"]}" }}'
-        )
-
+        langs = ", ".join([f'"{r[l]}"' for l in lang_cols])
+        table_entries.append(f'    {{ {r["id"]}, {langs} }}')
     table_text = ",\n".join(table_entries)
+
+    lang_return = "\n               : ".join(
+        [f"(current_lang == LANG_{l.upper()}) ? text_map[i].{l}" for l in lang_cols]
+    )
 
     return f"""/**
  * @file ui_language.c
- * @brief LVGL 多语言自动生成源文件
+ * @brief LVGL 多语言自动生成源文件 (动态语言版)
  * @author daijiale1396
- * @date 2025-10-31
+ * @date 2025-11-03
  * @generated Automatically by LVLangGen
  */
 
@@ -215,9 +217,7 @@ static lang_t current_lang = LANG_CN;
 
 typedef struct {{
     text_id_t id;
-    const char *cn;
-    const char *en;
-    const char *tc;
+    {lang_fields}
 }} text_map_t;
 
 static const text_map_t text_map[] = {{
@@ -228,9 +228,8 @@ const char *get_label_text(text_id_t id)
 {{
     for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) {{
         if (text_map[i].id == id) {{
-            return current_lang == LANG_CN ? text_map[i].cn :
-                   current_lang == LANG_EN ? text_map[i].en :
-                   text_map[i].tc;
+            return {lang_return}
+               : text_map[i].{lang_cols[-1]};  // fallback
         }}
     }}
     return "";
@@ -259,6 +258,7 @@ void update_label_text_recursive(lv_obj_t *parent)
     }}
 }}
 """
+
 
 if __name__ == "__main__":
     main()

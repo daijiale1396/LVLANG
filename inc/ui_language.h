@@ -1,8 +1,8 @@
 /**
  * @file ui_language.h
- * @brief LVGL 多语言自动生成头文件
+ * @brief LVGL 多语言自动生成头文件 (动态语言版)
  * @author daijiale1396
- * @date 2025-10-31
+ * @date 2025-11-03
  * @generated Automatically by LVLangGen
  */
 
@@ -17,9 +17,10 @@ extern "C" {
 #endif
 
 typedef enum {
-    LANG_CN = 0,
+    LANG_CN,
     LANG_EN,
     LANG_TC,
+    LANG_JP,
     LANG_MAX
 } lang_t;
 
