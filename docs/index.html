@@ -1,251 +1,848 @@
-<!DOCTYPE html>
-<html lang="zh">
+<!doctype html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>LVLang 语言表生成器</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LVLang — 语言表生成器</title>
+  <meta name="description" content="LVLang — 从CSV生成ui_language.h/.c并预览下载"/>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(145deg, #e9eef9, #f8faff);
-      color: #333;
+    :root{
+      --bg1:#071025; --bg2:#071026;
+      --card: #0b1220;
+      --muted:#94a3b8;
+      --accent:#0ea5e9;
+      --accent-2:#60a5fa;
+      --glass: rgba(255,255,255,0.03);
+      --success: #34d399;
+      --border: rgba(255,255,255,0.03);
+      --hover: rgba(255,255,255,0.05);
     }
-    header {
-      background: linear-gradient(90deg, #5162f5, #7785ff);
-      color: white;
-      padding: 15px 25px;
+    * {
+      box-sizing: border-box;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background:linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 60%);
+      font-family:Inter,Segoe UI,Roboto,system-ui,-apple-system,"Helvetica Neue",Arial,"Microsoft YaHei",sans-serif;
+      color:#e6eef6;
+      line-height:1.5;
+    }
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:16px;
+      width:100%;
+    }
+    header{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:12px 0;
+      flex-wrap:wrap;
+    }
+    .logo{
+      width:56px;
+      height:56px;
+      border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),#7dd3fc);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#002333;
+      font-weight:700;
+      font-size:20px;
+      flex-shrink:0;
+    }
+    .header-content {
+      flex:1;
+      min-width:0;
+    }
+    h1{
+      margin:0;
+      font-size:1.5rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    p.lead{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:0.9rem;
+    }
+
+    main{
+      display:grid;
+      grid-template-columns:1fr 460px;
+      gap:20px;
+      margin:20px 0;
+    }
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 6px 18px rgba(2,6,23,0.6);
+      border:1px solid var(--border);
+    }
+
+    .controls{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    label.btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:12px 16px;
+      border-radius:8px;
+      background:var(--glass);
+      cursor:pointer;
+      border:1px solid var(--border);
+      transition:all 0.2s ease;
+    }
+    label.btn:hover{
+      background:var(--hover);
+      border-color:rgba(255,255,255,0.08);
+    }
+    input[type=file]{
+      display:none;
+    }
+    .small{
+      font-size:0.85rem;
+      color:var(--muted);
+      line-height:1.4;
+    }
+
+    .preview{
+      min-height:300px;
+      max-height:500px;
+      overflow:auto;
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      padding:12px;
+      font-family:Menlo,Monaco,monospace,"Microsoft YaHei",sans-serif;
+      font-size:0.85rem;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      border:1px solid var(--border);
+    }
+    .preview::-webkit-scrollbar{
+      width:6px;
+      height:6px;
+    }
+    .preview::-webkit-scrollbar-thumb{
+      background:var(--muted);
+      border-radius:3px;
+      opacity:0.3;
+    }
+    .preview::-webkit-scrollbar-track{
+      background:transparent;
+    }
+
+    .cols{display:flex;gap:8px}
+    .col{flex:1}
+    .meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .chip{
+      background:rgba(255,255,255,0.03);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:0.8rem;
+      color:var(--muted);
+      border:1px solid var(--border);
+      white-space:nowrap;
+    }
+
+    footer{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:0.8rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 0;
+      border-top:1px solid var(--border);
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    a.link{
+      color:var(--accent);
+      text-decoration:none;
+      transition:color 0.2s ease;
+    }
+    a.link:hover{
+      color:var(--accent-2);
+    }
+
+    button.action{
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      border:none;
+      padding:12px 16px;
+      border-radius:8px;
+      color:#012;
+      cursor:pointer;
+      font-weight:600;
+      transition:transform 0.1s ease, box-shadow 0.2s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    button.action:hover{
+      box-shadow:0 4px 12px rgba(14,165,233,0.3);
+    }
+    button.action:active{
+      transform:scale(0.98);
+    }
+    button.secondary{
+      background:transparent;
+      border:1px solid var(--border);
+      padding:11px 14px;
+      border-radius:8px;
+      color:var(--muted);
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    button.secondary:hover{
+      background:var(--hover);
+      color:#e6eef6;
+    }
+    pre{white-space:pre-wrap;margin:0}
+
+    .lang-switch {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 1.2em;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      gap:8px;
+      margin-left:auto;
+      flex-shrink:0;
     }
-    select {
-      background: rgba(255,255,255,0.9);
-      border: none;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 14px;
+    .lang-btn {
+      padding:5px 10px;
+      border-radius:6px;
+      border:1px solid transparent;
+      background:var(--glass);
+      color:var(--muted);
+      cursor:pointer;
+      font-size:0.8rem;
+      transition:all 0.2s ease;
     }
-    main {
-      max-width: 1000px;
-      margin: 30px auto;
-      background: white;
-      border-radius: 12px;
-      padding: 25px 35px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    .lang-btn.active {
+      background:var(--accent);
+      color:#012;
     }
-    .upload-area {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 15px;
+    .lang-btn:not(.active):hover {
+      background:var(--hover);
+      color:#e6eef6;
     }
-    input[type=file] {
-      padding: 5px;
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin:12px 0 16px;
+      flex-wrap:wrap;
     }
-    button {
-      background: #5162f5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 18px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: 0.2s;
+    .tabs .tab{
+      padding:8px 16px;
+      border-radius:8px;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      border:1px solid var(--border);
+      font-weight:600;
+      font-size:0.85rem;
+      transition:all 0.2s ease;
+      white-space:nowrap;
     }
-    button:hover { background: #3b4ed8; }
-    .tab-bar {
-      display: flex;
-      border-bottom: 2px solid #e0e4f0;
-      margin-top: 20px;
+    .tabs .tab:hover:not(.active){
+      background:var(--hover);
+      color:#e6eef6;
     }
-    .tab-bar div {
-      padding: 10px 20px;
-      cursor: pointer;
-      border-radius: 10px 10px 0 0;
-      margin-right: 4px;
-      background: #f0f2fb;
-      transition: 0.2s;
-      font-weight: 500;
+    .tabs .tab.active{
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:#012;
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow:0 4px 12px rgba(7,18,38,0.6);
     }
-    .tab-bar div.active {
-      background: white;
-      border-bottom: 2px solid white;
-      color: #4A6CF7;
-      font-weight: 600;
+
+    .csv-container {
+      overflow-x:auto;
+      border-radius:8px;
+      border:1px solid var(--border);
     }
-    .tab-content {
-      background: #fafbff;
-      padding: 15px;
-      border-radius: 0 0 10px 10px;
-      border: 1px solid #e0e4f0;
-      border-top: none;
-      overflow-x: auto;
-      max-height: 400px;
-      white-space: pre-wrap;
+    table.csv {
+      border-collapse:collapse;
+      width:100%;
+      min-width:500px;
+      font-family:system-ui,monospace;
+      background:transparent;
     }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: #fff;
+    table.csv th, table.csv td {
+      border:1px solid var(--border);
+      padding:8px 12px;
+      font-size:0.85rem;
+      color:#e6eef6;
+      text-align:left;
+      white-space:nowrap;
+      max-width:200px;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px 10px;
-      text-align: left;
+    table.csv th {
+      background:rgba(255,255,255,0.02);
+      color:var(--muted);
+      font-weight:600;
+      position:sticky;
+      top:0;
+      z-index:1;
     }
-    th {
-      background: #f5f6ff;
+    td[contenteditable="true"] {
+      cursor:text;
     }
-    td:focus {
-      outline: 2px solid #5162f5;
-      background: #eef1ff;
+    td[contenteditable="true"]:focus {
+      outline:2px solid rgba(14,165,233,0.35);
+      background:rgba(14,165,233,0.04);
+      overflow:visible;
+      white-space:pre-wrap;
     }
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      padding: 15px;
-      color: #666;
-      font-size: 0.9em;
+
+    .row-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+    .notice{
+      padding:10px 12px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-size:0.85rem;
+      flex:1;
+      min-width:200px;
+    }
+
+    .drop-highlight {
+      border:2px dashed var(--accent) !important;
+      background:rgba(14,165,233,0.08) !important;
+    }
+
+    @media(max-width:1100px){
+      main{
+        grid-template-columns:1fr;
+        gap:24px;
+      }
+      .preview{
+        max-height:400px;
+      }
+      aside.card {
+        order:-1;
+      }
+    }
+
+    @media(max-width:768px){
+      header {
+        gap:12px;
+      }
+      .lang-switch {
+        margin-left:0;
+        margin-top:12px;
+        width:100%;
+        justify-content:flex-end;
+      }
+      .controls {
+        gap:12px;
+      }
+      .action-buttons {
+        flex-wrap:wrap;
+        row-gap:10px;
+      }
+      button.action, button.secondary {
+        flex:1;
+        min-width:120px;
+        justify-content:center;
+      }
+    }
+
+    @media(max-width:360px){
+      .wrap {
+        padding:10px;
+      }
+      .logo {
+        width:48px;
+        height:48px;
+        font-size:18px;
+      }
+      h1 {
+        font-size:1.2rem;
+      }
+      .tabs .tab {
+        padding:6px 12px;
+        font-size:0.8rem;
+      }
+      .preview {
+        min-height:250px;
+        padding:8px;
+      }
     }
   </style>
 </head>
 <body>
-<header>
-  <span data-i18n="title">LVLang 语言表生成器</span>
-  <select id="langSelect">
-    <option value="cn">中文</option>
-    <option value="en">English</option>
-    <option value="jp">日本語</option>
-    <option value="tc">繁體中文</option>
-  </select>
-</header>
+  <div class="wrap">
+    <header>
+      <div class="logo">LV</div>
+      <div class="header-content">
+        <h1 data-i18n="title">LVLang — 语言表生成器</h1>
+        <p class="lead" data-i18n="subtitle">上传CSV文件（包含id和语言列）。预览并下载生成的 <code>ui_language.h</code> / <code>ui_language.c</code>。默认语言设为第一列语言。</p>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="en">English</button>
+      </div>
+    </header>
 
-<main>
-  <div class="upload-area">
-    <label data-i18n="upload">上传 CSV 文件：</label>
-    <input type="file" id="csvFile" accept=".csv">
-    <div>
-      <button id="btnH" data-i18n="download_h">下载 ui_language.h</button>
-      <button id="btnC" data-i18n="download_c">下载 ui_language.c</button>
-    </div>
+    <main>
+      <section class="card">
+        <div class="controls">
+          <div class="meta">
+            <div class="chip" data-i18n="open-source">开源: <a class="link" href="https://github.com/daijiale1396/LVLANG" target="_blank">daijiale1396/LVLANG</a></div>
+            <div class="chip" data-i18n="version">生成器 v2</div>
+          </div>
+
+          <label class="btn" id="dropArea">
+            <input id="csvfile" type="file" accept=".csv,text/csv" />
+            📁 <span data-i18n="upload-csv">上传语言CSV</span>
+          </label>
+
+          <div class="small" data-i18n="csv-format">CSV格式：首行标题必须包含 <code>id</code> 列和一个或多个语言列（例如 <code>cn,en,tc,jp</code>）</div>
+
+          <div class="meta" id="detected"></div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap" class="action-buttons">
+            <button class="action" id="genBtn" disabled data-i18n="generate">生成 & 预览</button>
+            <button id="downloadBtn" class="action" style="background:linear-gradient(90deg,var(--success),#10b981)" disabled data-i18n="download">下载文件</button>
+            <button id="clearBtn" class="secondary" data-i18n="clear">清除</button>
+          </div>
+
+          <div class="row-actions">
+            <div class="notice" id="notice" data-i18n="no-csv">未加载CSV文件。</div>
+          </div>
+        </div>
+
+        <hr style="border:none;height:1px;background:var(--border);margin:20px 0">
+
+        <div>
+          <div class="tabs" id="csvTabs">
+            <div class="tab active" data-tab="csv" data-i18n="csv-editable">CSV（可编辑）</div>
+            <div class="tab" data-tab="raw" data-i18n="raw-csv">原始CSV</div>
+          </div>
+          <div class="csv-container">
+            <div class="preview" id="csvPreview" data-i18n="no-csv-yet">尚未加载CSV文件。拖放或使用上传按钮。</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <strong data-i18n="output-preview">输出预览</strong>
+          <div class="small" data-i18n="author">作者: <span style="color:var(--accent)">daijiale1396</span></div>
+        </div>
+
+        <div style="height:16px"></div>
+
+        <div class="tabs" id="outTabs" style="margin-bottom:12px">
+          <div class="tab active" data-tab="h">ui_language.h</div>
+          <div class="tab" data-tab="c">ui_language.c</div>
+        </div>
+
+        <div id="out-h" class="preview">—</div>
+        <div id="out-c" class="preview" style="display:none;margin-top:12px">—</div>
+      </aside>
+    </main>
+
+    <footer>
+      <div data-i18n="made-by">由 <a class="link" href="https://github.com/daijiale1396" target="_blank">daijiale1396</a> 制作 ❤️</div>
+      <div data-i18n="license">许可证: MIT</div>
+    </footer>
   </div>
 
-  <div class="tab-bar">
-    <div class="tab active" data-tab="csv">CSV 表格</div>
-    <div class="tab" data-tab="h">ui_language.h</div>
-    <div class="tab" data-tab="c">ui_language.c</div>
-  </div>
-
-  <div id="tab-csv" class="tab-content"></div>
-  <div id="tab-h" class="tab-content" style="display:none;"></div>
-  <div id="tab-c" class="tab-content" style="display:none;"></div>
-</main>
-
-<footer>
-  © 2025 LVLang | <a href="https://github.com/daijiale1396/LVLang" target="_blank">GitHub</a>
-</footer>
-
-<script>
-  const i18n = {
-    cn: { title:"LVLang 语言表生成器", upload:"上传 CSV 文件：", download_h:"下载 ui_language.h", download_c:"下载 ui_language.c" },
-    en: { title:"LVLang Language Table Generator", upload:"Upload CSV File:", download_h:"Download ui_language.h", download_c:"Download ui_language.c" },
-    jp: { title:"LVLang 言語テーブル生成ツール", upload:"CSVファイルをアップロード：", download_h:"ui_language.hをダウンロード", download_c:"ui_language.cをダウンロード" },
-    tc: { title:"LVLang 語言表生成器", upload:"上傳 CSV 檔案：", download_h:"下載 ui_language.h", download_c:"下載 ui_language.c" }
-  };
-
-  function setLang(l) {
-    document.querySelectorAll("[data-i18n]").forEach(e=>{
-      const key=e.getAttribute("data-i18n");
-      e.textContent=i18n[l][key]||key;
-    });
-    localStorage.setItem("lang",l);
-  }
-  const sel=document.getElementById("langSelect");
-  let lang=localStorage.getItem("lang")||"cn";
-  sel.value=lang;
-  setLang(lang);
-  sel.onchange=e=>setLang(e.target.value);
-
-  const csvFile=document.getElementById("csvFile");
-  const tabCsv=document.getElementById("tab-csv");
-  const tabH=document.getElementById("tab-h");
-  const tabC=document.getElementById("tab-c");
-  let rows=[], headers=[];
-
-  csvFile.addEventListener("change", e=>{
-    const file=e.target.files[0];
-    if(!file) return;
-    const r=new FileReader();
-    r.onload=ev=>{
-      const text=ev.target.result.trim();
-      const lines=text.split(/\r?\n/).map(l=>l.split(","));
-      headers=lines[0];
-      rows=lines.slice(1);
-      renderTable();
-      renderCode();
+  <script>
+    const i18n = {
+      zh: {
+        "title": "LVLang — 语言表生成器",
+        "subtitle": "上传CSV文件（包含id和语言列）。预览并下载生成的 <code>ui_language.h</code> / <code>ui_language.c</code>。默认语言设为第一列语言。",
+        "open-source": "开源: <a class='link' href='https://github.com/daijiale1396/LVLANG' target='_blank'>daijiale1396/LVLANG</a>",
+        "version": "生成器 v2",
+        "upload-csv": "上传语言CSV",
+        "csv-format": "CSV格式：首行标题必须包含 <code>id</code> 列和一个或多个语言列（例如 <code>cn,en,tc,jp</code>）",
+        "generate": "生成 & 预览",
+        "download": "下载文件",
+        "clear": "清除",
+        "no-csv": "未加载CSV文件。",
+        "csv-editable": "CSV（可编辑）",
+        "raw-csv": "原始CSV",
+        "no-csv-yet": "尚未加载CSV文件。拖放或使用上传按钮。",
+        "output-preview": "输出预览",
+        "author": "作者: <span style='color:var(--accent)'>daijiale1396</span>",
+        "made-by": "由 <a class='link' href='https://github.com/daijiale1396' target='_blank'>daijiale1396</a> 制作 ❤️",
+        "license": "许可证: MIT",
+        "parse-failed": "CSV解析失败。",
+        "missing-id-column": "CSV标题必须包含 'id' 列",
+        "need-language-column": "需要至少一个语言列（例如 cn,en）",
+        "parsed-rows": "已解析 {count} 行。默认语言: {lang}",
+        "no-csv-generate": "没有可生成的CSV。",
+        "row-missing-id": "行 {row}: 缺少id",
+        "duplicate-id": "重复的id: {id}",
+        "generated-previews": "已生成预览。使用“下载文件”保存。",
+        "no-content-download": "没有可下载的生成内容",
+        "files-downloaded": "文件已下载（两个独立文件）。",
+        "cleared": "已清除"
+      },
+      en: {
+        "title": "LVLang — Language Table Generator",
+        "subtitle": "Upload a CSV (id + language columns). Preview and download generated <code>ui_language.h</code> / <code>ui_language.c</code>. Default language set to first language column.",
+        "open-source": "Open-source: <a class='link' href='https://github.com/daijiale1396/LVLANG' target='_blank'>daijiale1396/LVLANG</a>",
+        "version": "Generator v2",
+        "upload-csv": "Upload language CSV",
+        "csv-format": "CSV format: first row header must include an <code>id</code> column and one or more language columns (eg. <code>cn,en,tc,jp</code>)",
+        "generate": "Generate & Preview",
+        "download": "Download Files",
+        "clear": "Clear",
+        "no-csv": "No CSV loaded.",
+        "csv-editable": "CSV (editable)",
+        "raw-csv": "Raw CSV",
+        "no-csv-yet": "No CSV loaded yet. Drag & drop or use the upload button.",
+        "output-preview": "Output preview",
+        "author": "Author: <span style='color:var(--accent)'>daijiale1396</span>",
+        "made-by": "Made with ❤️ by <a class='link' href='https://github.com/daijiale1396' target='_blank'>daijiale1396</a>",
+        "license": "License: MIT",
+        "parse-failed": "CSV parse failed.",
+        "missing-id-column": "CSV header must include 'id' column",
+        "need-language-column": "Need at least one language column (eg. cn,en)",
+        "parsed-rows": "Parsed {count} rows. Default language: {lang}",
+        "no-csv-generate": "No CSV to generate.",
+        "row-missing-id": "Row {row}: missing id",
+        "duplicate-id": "Duplicate id: {id}",
+        "generated-previews": "Generated previews. Use \"Download Files\" to save.",
+        "no-content-download": "No generated content to download",
+        "files-downloaded": "Files downloaded (two separate files).",
+        "cleared": "Cleared"
+      }
     };
-    r.readAsText(file,"utf-8");
-  });
 
-  function renderTable(){
-    let html="<table><tr>";
-    headers.forEach(h=>html+=`<th>${h}</th>`);
-    html+="</tr>";
-    rows.forEach((r,ri)=>{
-      html+="<tr>";
-      r.forEach((c,ci)=>{
-        html+=`<td contenteditable="true" data-ri="${ri}" data-ci="${ci}">${c}</td>`;
+    function setLanguage(lang) {
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
       });
-      html+="</tr>";
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang][key]) {
+          el.innerHTML = i18n[lang][key];
+        }
+      });
+      document.title = i18n[lang].title;
+    }
+
+    const csvfile = document.getElementById('csvfile');
+    const csvPreview = document.getElementById('csvPreview');
+    const detectedEl = document.getElementById('detected');
+    const genBtn = document.getElementById('genBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const notice = document.getElementById('notice');
+    const dropArea = document.getElementById('dropArea');
+    const outH = document.getElementById('out-h');
+    const outC = document.getElementById('out-c');
+    const csvTabs = document.getElementById('csvTabs');
+    const outTabs = document.getElementById('outTabs');
+
+    let parsedRows = null;
+    let headers = null;
+    let langCols = null;
+    let defaultLang = null;
+    let currentLang = 'zh';
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      window.addEventListener(eventName, preventDefaults, false);
+      dropArea.addEventListener(eventName, preventDefaults, false);
     });
-    html+="</table>";
-    tabCsv.innerHTML=html;
-    tabCsv.querySelectorAll("td").forEach(td=>{
-      td.addEventListener("input",()=>{
-        const {ri,ci}=td.dataset;
-        rows[ri][ci]=td.textContent;
-        renderCode();
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropArea.addEventListener(eventName, highlight, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, unhighlight, false);
+    });
+    function highlight() {
+      dropArea.classList.add('drop-highlight');
+    }
+    function unhighlight() {
+      dropArea.classList.remove('drop-highlight');
+    }
+
+    function simpleCSVParse(text){
+      if (!text) return null;
+      const lines = text.replace(/\r/g,'').split('\n').filter(l => l.trim() !== '');
+      if (lines.length < 1) return null;
+      const hdr = lines[0].split(',').map(h => h.trim());
+      const rows = [];
+      for (let i = 1; i < lines.length; ++i){
+        const parts = lines[i].split(',').map(p => p.trim());
+        const obj = {};
+        for (let j = 0; j < hdr.length; ++j){
+          obj[hdr[j]] = parts[j] === undefined ? '' : parts[j];
+        }
+        rows.push(obj);
+      }
+      return {headers: hdr, rows};
+    }
+
+    function escapeC(s){
+      return (s||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n');
+    }
+
+    function updateDetected(){
+      detectedEl.innerHTML = '';
+      if (!headers) return;
+      const languages = headers.filter(h => h.toLowerCase() !== 'id');
+      languages.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'chip';
+        d.textContent = c;
+        detectedEl.appendChild(d);
+      });
+    }
+
+    function renderCSVTable(){
+      if (!headers || !parsedRows) { 
+        csvPreview.innerHTML = i18n[currentLang]["no-csv-yet"]; 
+        return; 
+      }
+      const tbl = document.createElement('table');
+      tbl.className = 'csv';
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      tbl.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      parsedRows.forEach((r, ri) => {
+        const tr = document.createElement('tr');
+        headers.forEach((h, ci) => {
+          const td = document.createElement('td');
+          td.contentEditable = 'true';
+          td.dataset.ri = ri; td.dataset.ci = ci;
+          td.textContent = r[h] || '';
+          td.addEventListener('input', (ev) => {
+            parsedRows[ri][h] = ev.target.textContent;
+            generateOutputs();
+          });
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+      csvPreview.innerHTML = '';
+      csvPreview.appendChild(tbl);
+    }
+
+    function showNotice(msgKey, isError, params = {}){
+      let msg = i18n[currentLang][msgKey];
+      Object.keys(params).forEach(key => {
+        msg = msg.replace(`{${key}}`, params[key]);
+      });
+      notice.innerHTML = msg;
+      notice.style.color = isError ? '#ffb4b4' : '#cceedd';
+    }
+
+    function genHeaderText(rows, langCols){
+      const enumLang = langCols.map(c => `    LANG_${c.toUpperCase()}`).join(',\n');
+      const enumText = rows.map(r => `    ${r.id}`).join(',\n');
+      const now = new Date().toISOString().split('T')[0];
+      return `/**\n * @file ui_language.h\n * @brief LVGL 多语言自动生成头文件 (动态语言版)\n * @author daijiale1396\n * @date ${now}\n */\n\n#ifndef UI_LANGUAGE_H\n#define UI_LANGUAGE_H\n\n#include \"lvgl.h\"\n#include <stdint.h>\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\ntypedef enum {\n${enumLang},\n    LANG_MAX\n} lang_t;\n\ntypedef enum {\n${enumText}\n} text_id_t;\n\nconst char *get_label_text(text_id_t id);\nvoid set_language(lang_t lang);\nvoid update_label_text_recursive(lv_obj_t *parent);\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // UI_LANGUAGE_H\n`;
+    }
+
+    function genSourceText(rows, langCols){
+      const now = new Date().toISOString().split('T')[0];
+      const structFields = langCols.map(c => `    const char *${c};`).join('\n');
+      const tableEntries = rows.map(r => {
+        const vals = langCols.map(c => `"${escapeC(r[c] || '')}"`).join(', ');
+        return `    { ${r.id}, ${vals} }`;
+      }).join(',\n');
+      const mapDef = `typedef struct {\n    text_id_t id;\n${structFields}\n} text_map_t;`;
+      const chooseLines = langCols.map(c => `            if (current_lang == LANG_${c.toUpperCase()}) return text_map[i].${c};`).join('\n');
+      return `/**\n * @file ui_language.c\n * @brief LVGL 多语言自动生成源文件 (dynamic languages)\n * @author daijiale1396\n * @date ${now}\n */\n\n#include \"ui_language.h\"\n\nstatic lang_t current_lang = LANG_${langCols[0].toUpperCase()};\n\n${mapDef}\n\nstatic const text_map_t text_map[] = {\n${tableEntries}\n};\n\nconst char *get_label_text(text_id_t id)\n{\n    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) {\n        if (text_map[i].id == id) {\n${chooseLines}\n            return text_map[i].${langCols[langCols.length-1]}; // fallback\n        }\n    }\n    return \"\";\n}\n\nvoid set_language(lang_t lang)\n{\n    if (lang < LANG_MAX) current_lang = lang;\n}\n\nvoid update_label_text_recursive(lv_obj_t *parent)\n{\n    if (!parent) return;\n    int32_t i = 0;\n    lv_obj_t *child = NULL;\n    while ((child = lv_obj_get_child(parent, i)) != NULL) {\n        if (lv_obj_check_type(child, &lv_label_class)) {\n            text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);\n            if (id > 0) {\n                lv_label_set_text(child, get_label_text(id));\n            }\n        }\n        update_label_text_recursive(child);\n        i++;\n    }\n}\n`;
+    }
+
+    function generateOutputs() {
+      if (!parsedRows || !langCols) { 
+        showNotice('no-csv-generate', true); 
+        return; 
+      }
+      const ids = new Set();
+      for (let i = 0; i < parsedRows.length; ++i) {
+        const id = (parsedRows[i]['id'] || '').trim();
+        if (!id) { 
+          showNotice('row-missing-id', true, {row: i+1}); 
+          return; 
+        }
+        if (ids.has(id)) { 
+          showNotice('duplicate-id', true, {id: id}); 
+          return; 
+        }
+        ids.add(id);
+      }
+      const rowsCopy = parsedRows.map(r => {
+        const o = { id: r.id };
+        langCols.forEach(c => o[c] = r[c] || '');
+        return o;
+      });
+      const hText = genHeaderText(rowsCopy, langCols);
+      const cText = genSourceText(rowsCopy, langCols);
+      
+      // 确保预览内容正确设置
+      outH.textContent = hText;
+      outC.textContent = cText;
+      
+      // 显示默认预览（.h文件）
+      outH.style.display = 'block';
+      outC.style.display = 'none';
+      
+      downloadBtn.disabled = false;
+      showNotice('generated-previews', false);
+    }
+
+    csvfile.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const txt = reader.result;
+        csvPreview.textContent = txt;
+        const parsed = simpleCSVParse(txt);
+        if (!parsed) {
+          showNotice('parse-failed', true);
+          return;
+        }
+        headers = parsed.headers;
+        parsedRows = parsed.rows;
+        if (!headers.includes('id')) {
+          showNotice('missing-id-column', true);
+          genBtn.disabled = true;
+          downloadBtn.disabled = true;
+          return;
+        }
+        langCols = headers.filter(h => h.toLowerCase() !== 'id');
+        if (langCols.length === 0) {
+          showNotice('need-language-column', true);
+          genBtn.disabled = true;
+          downloadBtn.disabled = true;
+          return;
+        }
+        defaultLang = langCols[0];
+        updateDetected();
+        renderCSVTable();
+        showNotice('parsed-rows', false, {count: parsedRows.length, lang: defaultLang});
+        genBtn.disabled = false;
+        downloadBtn.disabled = true;
+      };
+      reader.onerror = () => showNotice('parse-failed', true);
+      reader.readAsText(f, 'utf-8');
+    });
+
+    genBtn.addEventListener('click', generateOutputs);
+
+    downloadBtn.addEventListener('click', () => {
+      const h = outH.textContent || '';
+      const c = outC.textContent || '';
+      if (!h || !c) { 
+        showNotice('no-content-download', true); 
+        return; 
+      }
+      const downloadText = (filename, text) => {
+        const blob = new Blob([text], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; document.body.appendChild(a);
+        a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      };
+      downloadText('ui_language.h', h);
+      downloadText('ui_language.c', c);
+      showNotice('files-downloaded', false);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      parsedRows = null; headers = null; langCols = null; defaultLang = null;
+      csvfile.value = '';
+      csvPreview.innerHTML = i18n[currentLang]["no-csv-yet"];
+      detectedEl.innerHTML = '';
+      outH.textContent = '—'; 
+      outC.textContent = '—';
+      outH.style.display = 'block';
+      outC.style.display = 'none';
+      showNotice('cleared', false);
+      genBtn.disabled = true; 
+      downloadBtn.disabled = true;
+    });
+
+    // 修复标签页切换逻辑（明确区分CSV标签和输出标签）
+    csvTabs.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        csvTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabKey = tab.dataset.tab;
+        
+        if (tabKey === 'csv') {
+          renderCSVTable();
+        } else {
+          const raw = headers ? ([headers.join(',')].concat(parsedRows.map(r => headers.map(h => r[h]||'').join(','))).join('\n')) : i18n[currentLang]["no-csv"];
+          csvPreview.textContent = raw;
+        }
       });
     });
-  }
 
-  function renderCode(){
-    let h=`typedef enum {\n`;
-    rows.forEach(r=>h+=`    ${r[0]}, // ${r[1]} / ${r[2]}\n`);
-    h+=`} text_id_t;\n\nconst char *get_label_text(text_id_t id);\n`;
-    tabH.textContent=h;
+    outTabs.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        outTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabKey = tab.dataset.tab;
+        
+        if (tabKey === 'h') {
+          outH.style.display = 'block';
+          outC.style.display = 'none';
+        } else {
+          outH.style.display = 'none';
+          outC.style.display = 'block';
+        }
+      });
+    });
 
-    let c=`#include "ui_language.h"\n\nconst char *get_label_text(text_id_t id){\n    switch(id){\n`;
-    rows.forEach(r=>c+=`        case ${r[0]}: return "${r[1]}";\n`);
-    c+=`        default: return "";\n    }\n}`;
-    tabC.textContent=c;
-  }
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLang = btn.dataset.lang;
+        setLanguage(currentLang);
+      });
+    });
 
-  document.querySelectorAll(".tab").forEach(tab=>{
-    tab.onclick=()=>{
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-      document.querySelectorAll(".tab-content").forEach(c=>c.style.display="none");
-      document.getElementById("tab-"+tab.dataset.tab).style.display="block";
-    };
-  });
+    window.addEventListener('drop', e => {
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        csvfile.files = e.dataTransfer.files;
+        csvfile.dispatchEvent(new Event('change'));
+      }
+    });
 
-  function downloadFile(text,name){
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));
-    a.download=name;
-    a.click();
-  }
-
-  document.getElementById("btnH").onclick=()=>downloadFile(tabH.textContent,"ui_language.h");
-  document.getElementById("btnC").onclick=()=>downloadFile(tabC.textContent,"ui_language.c");
-</script>
+    setLanguage(currentLang);
+  </script>
 </body>
 </html>
