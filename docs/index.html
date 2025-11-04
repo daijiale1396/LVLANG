@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>LVLang 语言表生成器</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(145deg, #e9eef9, #f8faff);
+      color: #333;
+    }
+    header {
+      background: linear-gradient(90deg, #5162f5, #7785ff);
+      color: white;
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    select {
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 25px 35px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .upload-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input[type=file] {
+      padding: 5px;
+    }
+    button {
+      background: #5162f5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover { background: #3b4ed8; }
+    .tab-bar {
+      display: flex;
+      border-bottom: 2px solid #e0e4f0;
+      margin-top: 20px;
+    }
+    .tab-bar div {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 10px 10px 0 0;
+      margin-right: 4px;
+      background: #f0f2fb;
+      transition: 0.2s;
+      font-weight: 500;
+    }
+    .tab-bar div.active {
+      background: white;
+      border-bottom: 2px solid white;
+      color: #4A6CF7;
+      font-weight: 600;
+    }
+    .tab-content {
+      background: #fafbff;
+      padding: 15px;
+      border-radius: 0 0 10px 10px;
+      border: 1px solid #e0e4f0;
+      border-top: none;
+      overflow-x: auto;
+      max-height: 400px;
+      white-space: pre-wrap;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    th {
+      background: #f5f6ff;
+    }
+    td:focus {
+      outline: 2px solid #5162f5;
+      background: #eef1ff;
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 15px;
+      color: #666;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <span data-i18n="title">LVLang 语言表生成器</span>
+  <select id="langSelect">
+    <option value="cn">中文</option>
+    <option value="en">English</option>
+    <option value="jp">日本語</option>
+    <option value="tc">繁體中文</option>
+  </select>
+</header>
+
+<main>
+  <div class="upload-area">
+    <label data-i18n="upload">上传 CSV 文件：</label>
+    <input type="file" id="csvFile" accept=".csv">
+    <div>
+      <button id="btnH" data-i18n="download_h">下载 ui_language.h</button>
+      <button id="btnC" data-i18n="download_c">下载 ui_language.c</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" data-tab="csv">CSV 表格</div>
+    <div class="tab" data-tab="h">ui_language.h</div>
+    <div class="tab" data-tab="c">ui_language.c</div>
+  </div>
+
+  <div id="tab-csv" class="tab-content"></div>
+  <div id="tab-h" class="tab-content" style="display:none;"></div>
+  <div id="tab-c" class="tab-content" style="display:none;"></div>
+</main>
+
+<footer>
+  © 2025 LVLang | <a href="https://github.com/daijiale1396/LVLang" target="_blank">GitHub</a>
+</footer>
+
+<script>
+  const i18n = {
+    cn: { title:"LVLang 语言表生成器", upload:"上传 CSV 文件：", download_h:"下载 ui_language.h", download_c:"下载 ui_language.c" },
+    en: { title:"LVLang Language Table Generator", upload:"Upload CSV File:", download_h:"Download ui_language.h", download_c:"Download ui_language.c" },
+    jp: { title:"LVLang 言語テーブル生成ツール", upload:"CSVファイルをアップロード：", download_h:"ui_language.hをダウンロード", download_c:"ui_language.cをダウンロード" },
+    tc: { title:"LVLang 語言表生成器", upload:"上傳 CSV 檔案：", download_h:"下載 ui_language.h", download_c:"下載 ui_language.c" }
+  };
+
+  function setLang(l) {
+    document.querySelectorAll("[data-i18n]").forEach(e=>{
+      const key=e.getAttribute("data-i18n");
+      e.textContent=i18n[l][key]||key;
+    });
+    localStorage.setItem("lang",l);
+  }
+  const sel=document.getElementById("langSelect");
+  let lang=localStorage.getItem("lang")||"cn";
+  sel.value=lang;
+  setLang(lang);
+  sel.onchange=e=>setLang(e.target.value);
+
+  const csvFile=document.getElementById("csvFile");
+  const tabCsv=document.getElementById("tab-csv");
+  const tabH=document.getElementById("tab-h");
+  const tabC=document.getElementById("tab-c");
+  let rows=[], headers=[];
+
+  csvFile.addEventListener("change", e=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      const text=ev.target.result.trim();
+      const lines=text.split(/\r?\n/).map(l=>l.split(","));
+      headers=lines[0];
+      rows=lines.slice(1);
+      renderTable();
+      renderCode();
+    };
+    r.readAsText(file,"utf-8");
+  });
+
+  function renderTable(){
+    let html="<table><tr>";
+    headers.forEach(h=>html+=`<th>${h}</th>`);
+    html+="</tr>";
+    rows.forEach((r,ri)=>{
+      html+="<tr>";
+      r.forEach((c,ci)=>{
+        html+=`<td contenteditable="true" data-ri="${ri}" data-ci="${ci}">${c}</td>`;
+      });
+      html+="</tr>";
+    });
+    html+="</table>";
+    tabCsv.innerHTML=html;
+    tabCsv.querySelectorAll("td").forEach(td=>{
+      td.addEventListener("input",()=>{
+        const {ri,ci}=td.dataset;
+        rows[ri][ci]=td.textContent;
+        renderCode();
+      });
+    });
+  }
+
+  function renderCode(){
+    let h=`typedef enum {\n`;
+    rows.forEach(r=>h+=`    ${r[0]}, // ${r[1]} / ${r[2]}\n`);
+    h+=`} text_id_t;\n\nconst char *get_label_text(text_id_t id);\n`;
+    tabH.textContent=h;
+
+    let c=`#include "ui_language.h"\n\nconst char *get_label_text(text_id_t id){\n    switch(id){\n`;
+    rows.forEach(r=>c+=`        case ${r[0]}: return "${r[1]}";\n`);
+    c+=`        default: return "";\n    }\n}`;
+    tabC.textContent=c;
+  }
+
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.onclick=()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      document.querySelectorAll(".tab-content").forEach(c=>c.style.display="none");
+      document.getElementById("tab-"+tab.dataset.tab).style.display="block";
+    };
+  });
+
+  function downloadFile(text,name){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));
+    a.download=name;
+    a.click();
+  }
+
+  document.getElementById("btnH").onclick=()=>downloadFile(tabH.textContent,"ui_language.h");
+  document.getElementById("btnC").onclick=()=>downloadFile(tabC.textContent,"ui_language.c");
+</script>
+</body>
+</html>
