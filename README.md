@@ -102,6 +102,11 @@ python3 gen_lang_table.py
 
 ## 🧰 示例
 ```c
+// 创建标签并绑定文本 ID
+lv_obj_t *label = lv_label_create(parent);
+lv_label_set_text(label, get_label_text(TEXT_HORIZONTAL));
+lv_obj_set_user_data(label, (void *)(uintptr_t)TEXT_HORIZONTAL);
+
 // 切换为繁体中文并刷新整个屏幕的标签
 set_language(LANG_TC);
 update_label_text_recursive(lv_scr_act());
