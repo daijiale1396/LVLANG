@@ -11,20 +11,27 @@
 - 🔒 类型安全且跨平台：兼容 32/64 位系统与不同编译器
 - 💡 纯 C 实现，无外部依赖，适配嵌入式与 PC 模拟器
 - ⚡ 脚本自动化工具链：tools/gen_lang_table.py 一键生成完整语言代码
+- ✅ 提供网页可视化界面，无需命令行
 - 🧾 易扩展结构：添加新语言仅需在 CSV 新增列，无需改动源文件
 
 
 ## 📁 项目结构
 ```
-lvgl_language_switching_management/
-├── inc/
-│   └── ui_language.h  # 自动生成的头文件
-├── src/
-│   └── ui_language.c  # 自动生成的源文件
-├── tools/
-│   └── gen_lang_table.py  # CSV 转换脚本
-├── language.csv  # 多语言文本表
-└── README.md  # 项目说明
+ubuntu@ubuntu:~/LVLang$ tree
+.
+├── docs
+│   └── index.html   # 网页版图形化语言生成工具
+├── inc
+│   └── ui_language.h
+├── language.csv
+├── LICENSE
+├── README.md
+├── src
+│   └── ui_language.c
+└── tools
+    ├── gen_lang_table.py   # 自动生成语言表的 Python 脚本
+    └── README.md
+
 ```
 
 
@@ -65,6 +72,24 @@ python3 gen_lang_table.py
 
 执行后会在 `inc/` 和 `src/` 目录下生成对应的语言表文件。
 
+##  🌐 图形化网页工具（HTML）
+在 docs/index.html 中提供了一个可视化编辑界面，适合不想使用命令行的用户。直接用浏览器打开即可使用，无需编译或安装。
+✨ 功能亮点
+
+| 功能           | 说明    
+|---------------|-------|
+| 多语言编辑表格    | 可同时录入多国语言字符串  |
+| 自动生成代码     | 实时显示 .c/.h 文件内容  |
+| 预览与导出  | 一键导出代码压缩包  |
+| TEXT_TIMEZONE | 时区  |
+	
+🖼️ 网页使用方式
+打开 docs/index.html
+在表格中输入文本 ID 和对应多语言内容
+点击 “生成代码”
+查看右侧 .h/.c 文件预览
+点击 “导出代码”，下载到本地
+将生成的文件放入 inc/ 与 src/ 目录下即可使用
 
 ## 🔍 API 说明
 
