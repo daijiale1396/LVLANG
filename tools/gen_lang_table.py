@@ -148,7 +148,34 @@ def main():
 
 def gen_header(rows, lang_cols):
     lang_enum_items = ",\n    ".join([f"LANG_{l.upper()}" for l in lang_cols])
-    enum_items = ",\n    ".join([r["id"] for r in rows])
+
+    # 选择两种语言用于注释展示（优先 cn 和 en）
+    display_langs = []
+    for l in ("cn", "en"):
+        if l in lang_cols:
+            display_langs.append(l)
+    if len(display_langs) < 2:
+        display_langs = lang_cols[:2]
+
+    # 构建带注释的枚举项
+    enum_lines = []
+    for idx, r in enumerate(rows):
+        rid = r["id"]
+        if idx == 0:
+            enum_line = f"    {rid} = 1,"
+        else:
+            enum_line = f"    {rid},"
+
+        # 生成注释部分
+        comments = []
+        for lang in display_langs:
+            val = r.get(lang, "").replace('"', '\\"')
+            comments.append(f"\"{val}\"")
+        comment_text = " / ".join(comments)
+
+        enum_lines.append(f"{enum_line:<40} // {idx + 1}: {comment_text}")
+
+    enum_items = "\n".join(enum_lines)
 
     return f"""/**
  * @file ui_language.h
@@ -174,7 +201,7 @@ typedef enum {{
 }} lang_t;
 
 typedef enum {{
-    {enum_items}
+{enum_items}
 }} text_id_t;
 
 const char *get_label_text(text_id_t id);
@@ -226,8 +253,10 @@ static const text_map_t text_map[] = {{
 
 const char *get_label_text(text_id_t id)
 {{
-    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) {{
-        if (text_map[i].id == id) {{
+    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) 
+    {{
+        if (text_map[i].id == id) 
+        {{
             return {lang_return}
                : text_map[i].{lang_cols[-1]};  // fallback
         }}
@@ -246,10 +275,13 @@ void update_label_text_recursive(lv_obj_t *parent)
 
     int32_t i = 0;
     lv_obj_t *child = NULL;
-    while ((child = lv_obj_get_child(parent, i)) != NULL) {{
-        if (lv_obj_check_type(child, &lv_label_class)) {{
+    while ((child = lv_obj_get_child(parent, i)) != NULL) 
+    {{
+        if (lv_obj_check_type(child, &lv_label_class)) 
+        {{
             text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);
-            if (id > 0) {{
+            if (id > 0) 
+            {{
                 lv_label_set_text(child, get_label_text(id));
             }}
         }}

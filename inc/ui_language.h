@@ -25,17 +25,17 @@ typedef enum {
 } lang_t;
 
 typedef enum {
-    TEXT_OK,
-    TEXT_CANCEL,
-    TEXT_SAVE,
-    TEXT_LOAD,
-    TEXT_EXIT,
-    TEXT_FIRMWARE_UPGRADE,
-    TEXT_CONFIG_UPGRADE,
-    TEXT_MENU,
-    TEXT_HELP,
-    TEXT_ABOUT,
-    TEXT_LANGUAGE
+    TEXT_OK = 1,                         // 1: "确定" / "OK"
+    TEXT_CANCEL,                         // 2: "取消" / "Cancel"
+    TEXT_SAVE,                           // 3: "保存" / "Save"
+    TEXT_LOAD,                           // 4: "加载" / "Load"
+    TEXT_EXIT,                           // 5: "退出" / "Exit"
+    TEXT_FIRMWARE_UPGRADE,               // 6: "升级固件" / "Firmware"
+    TEXT_CONFIG_UPGRADE,                 // 7: "升级配置" / "Config"
+    TEXT_MENU,                           // 8: "功能菜单" / "Menu"
+    TEXT_HELP,                           // 9: "帮助" / "Help"
+    TEXT_ABOUT,                          // 10: "关于" / "About"
+    TEXT_LANGUAGE,                       // 11: "语言" / "Language"
 } text_id_t;
 
 const char *get_label_text(text_id_t id);

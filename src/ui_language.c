@@ -34,8 +34,10 @@ static const text_map_t text_map[] = {
 
 const char *get_label_text(text_id_t id)
 {
-    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) {
-        if (text_map[i].id == id) {
+    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) 
+    {
+        if (text_map[i].id == id) 
+        {
             return (current_lang == LANG_CN) ? text_map[i].cn
                : (current_lang == LANG_EN) ? text_map[i].en
                : (current_lang == LANG_TC) ? text_map[i].tc
@@ -51,16 +53,19 @@ void set_language(lang_t lang)
     if (lang < LANG_MAX) current_lang = lang;
 }
 
-void update_label_text_recursive(lv_obj_t *parent)
+void get_label_text(lv_obj_t *parent)
 {
     if (!parent) return;
 
     int32_t i = 0;
     lv_obj_t *child = NULL;
-    while ((child = lv_obj_get_child(parent, i)) != NULL) {
-        if (lv_obj_check_type(child, &lv_label_class)) {
+    while ((child = lv_obj_get_child(parent, i)) != NULL) 
+    {
+        if (lv_obj_check_type(child, &lv_label_class)) 
+        {
             text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);
-            if (id > 0) {
+            if (id > 0) 
+            {
                 lv_label_set_text(child, get_label_text(id));
             }
         }

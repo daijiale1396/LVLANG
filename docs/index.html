@@ -798,13 +798,30 @@
         const now = new Date().toISOString().split('T')[0];
         const escapeC = s => (s || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
         const enumLang = langCols.map(c => `    LANG_${c.toUpperCase()}`).join(',\n');
-        const enumText = rows.map(r => `    ${r.id}`).join(',\n');
+        
+        // 生成带注释的text_id枚举（第一个赋值为1）
+        const enumText = rows.map((r, index) => {
+          const seq = index + 1;
+          const cn = escapeC(r.cn || '');
+          const en = escapeC(r.en || '');
+          // 第一个枚举赋值为1，其余按顺序自动递增
+          if (index === 0) {
+            return `    ${r.id} = 1,           // ${seq}: "${cn}" / "${en}"`;
+          }
+          return `    ${r.id},               // ${seq}: "${cn}" / "${en}"`;
+        }).join('\n');
+
+        // 生成ui_language.h（保持{换行）
         this.elements.outH.textContent = `/**\n * @file ui_language.h\n * @brief LVGL multi-language header file (auto-generated)\n * @author daijiale1396\n * @date ${now}\n */\n\n#ifndef UI_LANGUAGE_H\n#define UI_LANGUAGE_H\n\n#include "lvgl.h"\n#include <stdint.h>\n\n#ifdef __cplusplus\nextern "C" {\n#endif\n\ntypedef enum {\n${enumLang},\n    LANG_MAX\n} lang_t;\n\ntypedef enum {\n${enumText}\n} text_id_t;\n\nconst char *get_label_text(text_id_t id);\nvoid set_language(lang_t lang);\nvoid update_label_text_recursive(lv_obj_t *parent);\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // UI_LANGUAGE_H\n`;
+
         const structFields = langCols.map(c => `    const char *${c};`).join('\n');
         const mapDef = `typedef struct {\n    text_id_t id;\n${structFields}\n} text_map_t;`;
         const tableEntries = rows.map(r => `    { ${r.id}, ${langCols.map(c => `"${escapeC(r[c] || '')}"`).join(', ')} }`).join(',\n');
         const chooseLines = langCols.map(c => `            if (current_lang == LANG_${c.toUpperCase()}) return text_map[i].${c};`).join('\n');
-        this.elements.outC.textContent = `/**\n * @file ui_language.c\n * @brief LVGL multi-language source file (auto-generated)\n * @author daijiale1396\n * @date ${now}\n */\n\n#include "ui_language.h"\n\nstatic lang_t current_lang = LANG_${langCols[0].toUpperCase()};\n\n${mapDef}\n\nstatic const text_map_t text_map[] = {\n${tableEntries}\n};\n\nconst char *get_label_text(text_id_t id)\n{\n    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i) {\n        if (text_map[i].id == id) {\n${chooseLines}\n            return text_map[i].${langCols[0]}; // fallback to default language\n        }\n    }\n    return "";\n}\n\nvoid set_language(lang_t lang)\n{\n    if (lang < LANG_MAX) current_lang = lang;\n}\n\nvoid update_label_text_recursive(lv_obj_t *parent)\n{\n    if (!parent) return;\n    uint32_t i = 0;\n    lv_obj_t *child;\n    while((child = lv_obj_get_child(parent, i))) {\n        if (lv_obj_check_type(child, &lv_label_class)) {\n            text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);\n            if ((uintptr_t)id != 0) { // Check if user data is set\n                lv_label_set_text(child, get_label_text(id));\n            }\n        }\n        update_label_text_recursive(child);\n        i++;\n    }\n}\n`;
+
+        // 生成ui_language.c（确保所有{都换行）
+        this.elements.outC.textContent = `/**\n * @file ui_language.c\n * @brief LVGL multi-language source file (auto-generated)\n * @author daijiale1396\n * @date ${now}\n */\n\n#include "ui_language.h"\n\nstatic lang_t current_lang = LANG_${langCols[0].toUpperCase()};\n\n${mapDef}\n\nstatic const text_map_t text_map[] = {\n${tableEntries}\n};\n\nconst char *get_label_text(text_id_t id)\n{\n    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i)\n    {\n        if (text_map[i].id == id)\n        {\n${chooseLines}\n            return text_map[i].${langCols[0]}; // fallback to default language\n        }\n    }\n    return "";\n}\n\nvoid set_language(lang_t lang)\n{\n    if (lang < LANG_MAX)\n        current_lang = lang;\n}\n\nvoid update_label_text_recursive(lv_obj_t *parent)\n{\n    if (!parent)\n        return;\n    uint32_t i = 0;\n    lv_obj_t *child;\n    while((child = lv_obj_get_child(parent, i)))\n    {\n        if (lv_obj_check_type(child, &lv_label_class))\n        {\n            text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);\n            if ((uintptr_t)id != 0)\n            {\n                // Check if user data is set\n                lv_label_set_text(child, get_label_text(id));\n            }\n        }\n        update_label_text_recursive(child);\n        i++;\n    }\n}\n`;
+
         this.updateButtonStates(true, true);
         this.showNotice('generated-previews', 'success');
       },
@@ -853,7 +870,6 @@
       updateOutputPreview() {
         const activeTab = this.elements.outTabs.querySelector('.tab.active').dataset.tab;
         this.elements.outH.style.display = activeTab === 'h' ? 'block' : 'none';
-        // 修复点: 将 active-tab 改回正确的 activeTab
         this.elements.outC.style.display = activeTab === 'c' ? 'block' : 'none';
       },
     };
