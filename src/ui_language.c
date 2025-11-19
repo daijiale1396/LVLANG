@@ -14,22 +14,20 @@ typedef struct {
     text_id_t id;
     const char *cn;
     const char *en;
-    const char *tc;
-    const char *jp;
 } text_map_t;
 
 static const text_map_t text_map[] = {
-    { TEXT_OK, "确定", "OK", "確定", "確認" },
-    { TEXT_CANCEL, "取消", "Cancel", "取消", "キャンセル" },
-    { TEXT_SAVE, "保存", "Save", "儲存", "保存" },
-    { TEXT_LOAD, "加载", "Load", "載入", "読み込み" },
-    { TEXT_EXIT, "退出", "Exit", "退出", "終了" },
-    { TEXT_FIRMWARE_UPGRADE, "升级固件", "Firmware", "升級韌體", "ファーム更新" },
-    { TEXT_CONFIG_UPGRADE, "升级配置", "Config", "升級配置", "設定更新" },
-    { TEXT_MENU, "功能菜单", "Menu", "功能選單", "メニュー" },
-    { TEXT_HELP, "帮助", "Help", "幫助", "ヘルプ" },
-    { TEXT_ABOUT, "关于", "About", "關於", "情報" },
-    { TEXT_LANGUAGE, "语言", "Language", "語言", "言語" }
+    { TEXT_OK, "确定", "OK" },
+    { TEXT_CANCEL, "取消", "Cancel" },
+    { TEXT_SAVE, "保存", "Save" },
+    { TEXT_LOAD, "加载", "Load" },
+    { TEXT_EXIT, "退出", "Exit" },
+    { TEXT_FREQUENCY, "频率", "Frequency" },
+    { TEXT_DC_VOLTAGE, "直流电压", "DC Voltage" },
+    { TEXT_DC_CURRENT, "直流电流", "DC Current" },
+    { TEXT_AUTO, "自动", "Auto" },
+    { TEXT_TIME_BASE, "时基", "Time Base" },
+    { TEXT_THRESHOLD, "阈值", "Threshold" }
 };
 
 const char *get_label_text(text_id_t id)
@@ -40,9 +38,7 @@ const char *get_label_text(text_id_t id)
         {
             return (current_lang == LANG_CN) ? text_map[i].cn
                : (current_lang == LANG_EN) ? text_map[i].en
-               : (current_lang == LANG_TC) ? text_map[i].tc
-               : (current_lang == LANG_JP) ? text_map[i].jp
-               : text_map[i].jp;  // fallback
+               : text_map[i].en;  // fallback
         }
     }
     return "";
@@ -53,7 +49,7 @@ void set_language(lang_t lang)
     if (lang < LANG_MAX) current_lang = lang;
 }
 
-void get_label_text(lv_obj_t *parent)
+void update_label_text_recursive(lv_obj_t *parent)
 {
     if (!parent) return;
 

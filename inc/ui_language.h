@@ -19,8 +19,6 @@ extern "C" {
 typedef enum {
     LANG_CN,
     LANG_EN,
-    LANG_TC,
-    LANG_JP,
     LANG_MAX
 } lang_t;
 
@@ -30,12 +28,12 @@ typedef enum {
     TEXT_SAVE,                           // 3: "保存" / "Save"
     TEXT_LOAD,                           // 4: "加载" / "Load"
     TEXT_EXIT,                           // 5: "退出" / "Exit"
-    TEXT_FIRMWARE_UPGRADE,               // 6: "升级固件" / "Firmware"
-    TEXT_CONFIG_UPGRADE,                 // 7: "升级配置" / "Config"
-    TEXT_MENU,                           // 8: "功能菜单" / "Menu"
-    TEXT_HELP,                           // 9: "帮助" / "Help"
-    TEXT_ABOUT,                          // 10: "关于" / "About"
-    TEXT_LANGUAGE,                       // 11: "语言" / "Language"
+    TEXT_FREQUENCY,                      // 6: "频率" / "Frequency"
+    TEXT_DC_VOLTAGE,                     // 7: "直流电压" / "DC Voltage"
+    TEXT_DC_CURRENT,                     // 8: "直流电流" / "DC Current"
+    TEXT_AUTO,                           // 9: "自动" / "Auto"
+    TEXT_TIME_BASE,                      // 10: "时基" / "Time Base"
+    TEXT_THRESHOLD,                      // 11: "阈值" / "Threshold"
 } text_id_t;
 
 const char *get_label_text(text_id_t id);
