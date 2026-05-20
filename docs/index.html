@@ -578,12 +578,12 @@
       i18n: {
         zh: {
           "title": "LVLang — 语言表生成器", "subtitle": "上传CSV文件（包含id和语言列）。预览并下载生成的 <code>ui_language.h</code> / <code>ui_language.c</code>。默认语言设为第一列语言。",
-          "open-source": `<a class='link' href='https://github.com/daijiale1396/LVLANG' target='_blank'>{githubIcon} 在 GitHub 查看</a>`,
+          "open-source": `<a class='link' href='https://github.com/Leo-Dai13/LVLANG' target='_blank'>{githubIcon} 在 GitHub 查看</a>`,
           "version": "生成器 v2.2", "upload-csv": "上传语言CSV", "csv-format": "CSV格式：首行标题必须包含 <code>id</code> 列和一个或多个语言列（例如 <code>cn,en,tc,jp</code>）",
           "generate": "生成 & 预览", "download": "下载文件", "clear": "清除", "no-csv": "未加载CSV文件。", "csv-editable": "CSV（可编辑）",
           "raw-csv": "原始CSV", "no-csv-yet": "尚未加载CSV文件。拖放或使用上传按钮。", "output-preview": "输出预览",
-          "author": `作者: <a class="link" href="https://github.com/daijiale1396" target="_blank">daijiale1396</a>`,
-          "made-by": `由 <a class='link' href='https://github.com/daijiale1396' target='_blank'>{githubIcon} daijiale1396</a> 制作 ❤️`,
+          "author": `作者: <a class="link" href="https://github.com/Leo-Dai13" target="_blank">Leo-Dai13</a>`,
+          "made-by": `由 <a class='link' href='https://github.com/Leo-Dai13' target='_blank'>{githubIcon} Leo-Dai13</a> 制作 ❤️`,
           "license": "许可证: MIT", "parse-failed": "CSV解析失败，请检查文件格式。", "missing-id-column": "CSV标题行必须包含 'id' 列。",
           "need-language-column": "CSV需要至少一个语言列（例如 cn, en）。", "parsed-rows": "已解析 {count} 行。默认语言: <strong>{lang}</strong>。",
           "no-csv-generate": "没有可生成的CSV数据。", "row-missing-id": "第 {row} 行: 缺少ID。", "duplicate-id": "发现重复ID: {id}。",
@@ -592,13 +592,13 @@
         },
         en: {
           "title": "LVLang — Language Table Generator", "subtitle": "Upload a CSV (id + language columns). Preview and download generated <code>ui_language.h</code> / <code>ui_language.c</code>. Default language set to first language column.",
-          "open-source": `<a class='link' href='https://github.com/daijiale1396/LVLANG' target='_blank'>{githubIcon} View on GitHub</a>`,
+          "open-source": `<a class='link' href='https://github.com/Leo-Dai13/LVLANG' target='_blank'>{githubIcon} View on GitHub</a>`,
           "version": "Generator v2.2", "upload-csv": "Upload Language CSV", "csv-format": "CSV format: first row header must include an <code>id</code> column and one or more language columns (eg. <code>cn,en,tc,jp</code>)",
           "generate": "Generate & Preview", "download": "Download Files", "clear": "Clear", "no-csv": "No CSV loaded.",
           "csv-editable": "CSV (editable)", "raw-csv": "Raw CSV", "no-csv-yet": "No CSV loaded yet. Drag & drop or use the upload button.",
           "output-preview": "Output preview",
-          "author": `Author: <a class="link" href="https://github.com/daijiale1396" target="_blank">daijiale1396</a>`,
-          "made-by": `Made with ❤️ by <a class='link' href='https://github.com/daijiale1396' target='_blank'>{githubIcon} daijiale1396</a>`,
+          "author": `Author: <a class="link" href="https://github.com/Leo-Dai13" target="_blank">Leo-Dai13</a>`,
+          "made-by": `Made with ❤️ by <a class='link' href='https://github.com/Leo-Dai13' target='_blank'>{githubIcon} Leo-Dai13</a>`,
           "license": "License: MIT", "parse-failed": "CSV parse failed. Please check file format.", "missing-id-column": "CSV header must include an 'id' column.",
           "need-language-column": "Need at least one language column (e.g., cn, en).", "parsed-rows": "Parsed {count} rows. Default language: <strong>{lang}</strong>.",
           "no-csv-generate": "No CSV data to generate.", "row-missing-id": "Row {row}: missing ID.", "duplicate-id": "Duplicate ID found: {id}.",
@@ -812,7 +812,7 @@
         }).join('\n');
 
         // 生成ui_language.h（保持{换行）
-        this.elements.outH.textContent = `/**\n * @file ui_language.h\n * @brief LVGL multi-language header file (auto-generated)\n * @author daijiale1396\n * @date ${now}\n */\n\n#ifndef UI_LANGUAGE_H\n#define UI_LANGUAGE_H\n\n#include "lvgl.h"\n#include <stdint.h>\n\n#ifdef __cplusplus\nextern "C" {\n#endif\n\ntypedef enum {\n${enumLang},\n    LANG_MAX\n} lang_t;\n\ntypedef enum {\n${enumText}\n} text_id_t;\n\nconst char *get_label_text(text_id_t id);\nvoid set_language(lang_t lang);\nvoid update_label_text_recursive(lv_obj_t *parent);\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // UI_LANGUAGE_H\n`;
+        this.elements.outH.textContent = `/**\n * @file ui_language.h\n * @brief LVGL multi-language header file (auto-generated)\n * @author Leo-Dai13\n * @date ${now}\n */\n\n#ifndef UI_LANGUAGE_H\n#define UI_LANGUAGE_H\n\n#include "lvgl.h"\n#include <stdint.h>\n\n#ifdef __cplusplus\nextern "C" {\n#endif\n\ntypedef enum {\n${enumLang},\n    LANG_MAX\n} lang_t;\n\ntypedef enum {\n${enumText}\n} text_id_t;\n\nconst char *get_label_text(text_id_t id);\nvoid set_language(lang_t lang);\nvoid update_label_text_recursive(lv_obj_t *parent);\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // UI_LANGUAGE_H\n`;
 
         const structFields = langCols.map(c => `    const char *${c};`).join('\n');
         const mapDef = `typedef struct {\n    text_id_t id;\n${structFields}\n} text_map_t;`;
@@ -820,7 +820,7 @@
         const chooseLines = langCols.map(c => `            if (current_lang == LANG_${c.toUpperCase()}) return text_map[i].${c};`).join('\n');
 
         // 生成ui_language.c（确保所有{都换行）
-        this.elements.outC.textContent = `/**\n * @file ui_language.c\n * @brief LVGL multi-language source file (auto-generated)\n * @author daijiale1396\n * @date ${now}\n */\n\n#include "ui_language.h"\n\nstatic lang_t current_lang = LANG_${langCols[0].toUpperCase()};\n\n${mapDef}\n\nstatic const text_map_t text_map[] = {\n${tableEntries}\n};\n\nconst char *get_label_text(text_id_t id)\n{\n    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i)\n    {\n        if (text_map[i].id == id)\n        {\n${chooseLines}\n            return text_map[i].${langCols[0]}; // fallback to default language\n        }\n    }\n    return "";\n}\n\nvoid set_language(lang_t lang)\n{\n    if (lang < LANG_MAX)\n        current_lang = lang;\n}\n\nvoid update_label_text_recursive(lv_obj_t *parent)\n{\n    if (!parent)\n        return;\n    uint32_t i = 0;\n    lv_obj_t *child;\n    while((child = lv_obj_get_child(parent, i)))\n    {\n        if (lv_obj_check_type(child, &lv_label_class))\n        {\n            text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);\n            if ((uintptr_t)id != 0)\n            {\n                // Check if user data is set\n                lv_label_set_text(child, get_label_text(id));\n            }\n        }\n        update_label_text_recursive(child);\n        i++;\n    }\n}\n`;
+        this.elements.outC.textContent = `/**\n * @file ui_language.c\n * @brief LVGL multi-language source file (auto-generated)\n * @author Leo-Dai13\n * @date ${now}\n */\n\n#include "ui_language.h"\n\nstatic lang_t current_lang = LANG_${langCols[0].toUpperCase()};\n\n${mapDef}\n\nstatic const text_map_t text_map[] = {\n${tableEntries}\n};\n\nconst char *get_label_text(text_id_t id)\n{\n    for (size_t i = 0; i < sizeof(text_map) / sizeof(text_map[0]); ++i)\n    {\n        if (text_map[i].id == id)\n        {\n${chooseLines}\n            return text_map[i].${langCols[0]}; // fallback to default language\n        }\n    }\n    return "";\n}\n\nvoid set_language(lang_t lang)\n{\n    if (lang < LANG_MAX)\n        current_lang = lang;\n}\n\nvoid update_label_text_recursive(lv_obj_t *parent)\n{\n    if (!parent)\n        return;\n    uint32_t i = 0;\n    lv_obj_t *child;\n    while((child = lv_obj_get_child(parent, i)))\n    {\n        if (lv_obj_check_type(child, &lv_label_class))\n        {\n            text_id_t id = (text_id_t)(uintptr_t)lv_obj_get_user_data(child);\n            if ((uintptr_t)id != 0)\n            {\n                // Check if user data is set\n                lv_label_set_text(child, get_label_text(id));\n            }\n        }\n        update_label_text_recursive(child);\n        i++;\n    }\n}\n`;
 
         this.updateButtonStates(true, true);
         this.showNotice('generated-previews', 'success');
